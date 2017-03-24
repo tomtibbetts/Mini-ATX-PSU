@@ -5,7 +5,7 @@ echo '#!/bin/bash
 #have other conflicts.  The original script used GPIO pins that were also used for SPI and so would have
 #conflicted with SPI applications.
 #This is GPIO 24 (pin 18 on the pinout diagram).
-#This is an input from ATXRaspi to the Pi.
+#This is an input from Mini ATX PSU to the Pi.
 #When button is held for ~3 seconds, this pin will become HIGH signalling to this script to poweroff the Pi.
 SHUTDOWN=24
 REBOOTPULSEMINIMUM=200      #reboot pulse signal should be at least this long
@@ -13,20 +13,19 @@ REBOOTPULSEMAXIMUM=600      #reboot pulse signal should be at most this long
 echo "$SHUTDOWN" > /sys/class/gpio/export
 echo "in" > /sys/class/gpio/gpio$SHUTDOWN/direction
 
-#Added reboot feature (with ATXRaspi R2.6 (or ATXRaspi 2.5 with blue dot on chip)
-#Hold ATXRaspi button for at least 500ms but no more than 2000ms and a reboot HIGH pulse of 500ms length will be issued
+#Hold Mini ATX PSU button for at least 500ms but no more than 2000ms and a reboot HIGH pulse of 500ms length will be issued
 
 #This is GPIO 23 (pin 16 on the pinout diagram).
-#This is an output from Pi to ATXRaspi and signals that the Pi has booted.
+#This is an output from Pi to Mini ATX PSU and signals that the Pi has booted.
 #This pin is asserted HIGH as soon as this script runs (by writing "1" to /sys/class/gpio/gpio8/value)
 BOOT=23
 echo "$BOOT" > /sys/class/gpio/export
 echo "out" > /sys/class/gpio/gpio$BOOT/direction
 echo "1" > /sys/class/gpio/gpio$BOOT/value
 
-echo "ATXRaspi shutdown script started: asserted pins ($SHUTDOWN=input,LOW; $BOOT=output,HIGH). Waiting for GPIO$SHUTDOWN to become HIGH..."
+echo "Mini ATX PSU shutdown script started: asserted pins ($SHUTDOWN=input,LOW; $BOOT=output,HIGH). Waiting for GPIO$SHUTDOWN to become HIGH..."
 
-#This loop continuously checks if the shutdown button was pressed on ATXRaspi (GPIO7 to become HIGH), and issues a shutdown when that happens.
+#This loop continuously checks if the shutdown button was pressed on Mini ATX PSU (GPIO7 to become HIGH), and issues a shutdown when that happens.
 #It sleeps as long as that has not happened.
 while [ 1 ]; do
   shutdownSignal=$(cat /sys/class/gpio/gpio$SHUTDOWN/value)
@@ -37,7 +36,7 @@ while [ 1 ]; do
     while [ $shutdownSignal = 1 ]; do
       /bin/sleep 0.02
       if [ $(($(date +%s%N | cut -b1-13)-$pulseStart)) -gt $REBOOTPULSEMAXIMUM ]; then
-        echo "ATXRaspi triggered a shutdown signal, halting Rpi ... "
+        echo "Mini ATX PSU triggered a shutdown signal, halting Rpi ... "
         sudo poweroff
         exit
       fi
@@ -45,7 +44,7 @@ while [ 1 ]; do
     done
     #pulse went LOW, check if it was long enough, and trigger reboot
     if [ $(($(date +%s%N | cut -b1-13)-$pulseStart)) -gt $REBOOTPULSEMINIMUM ]; then 
-      echo "ATXRaspi triggered a reboot signal, recycling Rpi ... "
+      echo "Mini ATX PSU triggered a reboot signal, recycling Rpi ... "
       sudo reboot
       exit
     fi
