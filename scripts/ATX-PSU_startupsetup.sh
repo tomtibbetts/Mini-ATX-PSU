@@ -28,9 +28,11 @@ try:
         pinResult = GPIO.wait_for_edge(SHUTDOWN, GPIO.FALLING, timeout = 600)
 
         if pinResult == None:
+            GPIO.output(BOOT_OK, GPIO.LOW)
             os.system("sudo poweroff")
             sys.exit()
         elif time.time() - pulseStart >= REBOOTPULSEMINIMUM:
+            GPIO.output(BOOT_OK, GPIO.LOW)
             os.system("sudo reboot")
             sys.exit()
 
@@ -40,6 +42,7 @@ try:
 except:
     pass
 finally:
+    GPIO.output(BOOT_OK, GPIO.LOW)
     GPIO.cleanup()
 ' > /etc/ATX-PSU_startup.py
 sudo chmod 755 /etc/ATX-PSU_startup.py
